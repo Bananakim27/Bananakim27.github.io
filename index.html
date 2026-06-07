@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Communication Advisor</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;background:linear-gradient(145deg,#e8f0fb 0%,#f0f5ff 30%,#faf8f3 70%,#e8f0fb 100%);min-height:100vh;padding:20px;color:#333}
+
+.container{max-width:720px;margin:0 auto}
+
+.header{text-align:center;margin-bottom:24px}
+.header h1{font-size:22px;color:#4A6FA5;font-weight:700;margin-bottom:4px}
+.header p{font-size:13px;color:#8a9ab5}
+.ai-badge{display:inline-flex;align-items:center;gap:4px;background:#EEEDFE;color:#534AB7;font-size:11px;padding:4px 12px;border-radius:16px;font-weight:600;margin-top:8px}
+
+.situation-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.tab{flex:1;min-width:140px;padding:10px 12px;background:rgba(255,255,255,0.7);border:1.5px solid #d8e2f0;border-radius:10px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:12px;color:#6b7fa3;line-height:1.3}
+.tab:hover{border-color:#4A6FA5;background:rgba(255,255,255,0.9)}
+.tab.active{background:#fff;border-color:#4A6FA5;color:#4A6FA5;font-weight:600;box-shadow:0 2px 8px rgba(74,111,165,0.1)}
+.tab .tab-num{display:block;font-size:10px;color:#b0bdd0;margin-bottom:2px;font-weight:600}
+.tab.active .tab-num{color:#4A6FA5}
+
+.card{background:rgba(255,255,255,0.88);border-radius:14px;padding:24px;margin-bottom:16px;border:1px solid rgba(216,226,240,0.6)}
+
+.situation-box{background:linear-gradient(135deg,#f5f8fc,#eef3fb);border-radius:10px;padding:16px;margin-bottom:16px;border-left:3px solid #4A6FA5}
+.situation-label{font-size:10px;color:#4A6FA5;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.situation-text{font-size:14px;color:#333;line-height:1.6}
+.thought-bubble{margin-top:8px;font-size:13px;color:#888;font-style:italic;display:none}
+
+.tip-hint{display:inline-block;background:#EEEDFE;color:#534AB7;font-size:11px;padding:3px 10px;border-radius:12px;margin-bottom:16px;font-weight:500}
+
+.input-area{margin-bottom:16px}
+.input-area label{display:block;font-size:13px;color:#6b7fa3;margin-bottom:6px;font-weight:500}
+.input-area textarea{width:100%;height:80px;padding:12px;border:1.5px solid #d8e2f0;border-radius:10px;font-size:14px;font-family:inherit;resize:vertical;outline:none;transition:border-color 0.2s;background:rgba(255,255,255,0.9)}
+.input-area textarea:focus{border-color:#4A6FA5}
+.input-area textarea::placeholder{color:#c0cde0}
+
+.submit-btn{background:#4A6FA5;color:#fff;border:none;padding:10px 28px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
+.submit-btn:hover{background:#3a5f95;transform:translateY(-1px)}
+.submit-btn:active{transform:translateY(0)}
+.submit-btn:disabled{background:#b0bdd0;cursor:not-allowed;transform:none}
+
+.feedback{display:none;margin-top:20px;animation:fadeIn 0.4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.feedback-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.feedback-icon{width:32px;height:32px;background:#EEEDFE;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
+.feedback-title{font-size:14px;font-weight:600;color:#534AB7}
+
+.feedback-section{margin-bottom:12px;padding:12px;border-radius:8px}
+.fb-strategy{background:#f5f8fc;border-left:3px solid #4A6FA5}
+.fb-suggestion{background:#fef9ee;border-left:3px solid #e8b830}
+.fb-example{background:#f0faf5;border-left:3px solid #1D9E75}
+.fb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.fb-strategy .fb-label{color:#4A6FA5}
+.fb-suggestion .fb-label{color:#ba7517}
+.fb-example .fb-label{color:#0F6E56}
+.fb-text{font-size:13px;line-height:1.6;color:#444}
+
+.try-again{background:none;border:1.5px solid #4A6FA5;color:#4A6FA5;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;margin-top:8px;transition:all 0.2s}
+.try-again:hover{background:#f0f5ff}
+
+.settings-toggle{text-align:right;margin-bottom:8px}
+.settings-toggle button{background:none;border:none;color:#b0bdd0;font-size:11px;cursor:pointer}
+.settings-toggle button:hover{color:#6b7fa3}
+.settings-panel{display:none;background:rgba(255,255,255,0.7);border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid #e8e0d0}
+.settings-panel label{font-size:11px;color:#888;display:block;margin-bottom:4px}
+.settings-panel input{width:100%;padding:6px 10px;border:1px solid #d8e2f0;border-radius:6px;font-size:12px;font-family:inherit}
+.settings-panel .note{font-size:10px;color:#b0bdd0;margin-top:4px}
+
+.loading{display:none;text-align:center;padding:20px;color:#6b7fa3;font-size:13px}
+.loading .dots::after{content:'';animation:dots 1.5s infinite}
+@keyframes dots{0%{content:''}33%{content:'.'}66%{content:'..'}100%{content:'...'}}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>AI Communication Advisor</h1>
+    <p>Practice your communication skills and get instant feedback</p>
+    <span class="ai-badge">AI-Powered</span>
+  </div>
+
+  <div class="settings-toggle"><button onclick="toggleSettings()">Settings</button></div>
+  <div class="settings-panel" id="settingsPanel">
+    <label>API Key (optional — leave empty to use built-in feedback)</label>
+    <input type="password" id="apiKey" placeholder="Enter API key for real AI feedback">
+    <p class="note">Supports OpenAI-compatible APIs. Without a key, feedback uses pre-set responses.</p>
+    <label style="margin-top:8px">API Base URL</label>
+    <input type="text" id="apiBase" placeholder="https://api.openai.com/v1" value="https://api.openai.com/v1">
+  </div>
+
+  <div class="situation-tabs" id="tabs"></div>
+
+  <div class="card">
+    <div class="situation-box">
+      <div class="situation-label" id="sitLabel">Situation 1</div>
+      <div class="situation-text" id="sitText"></div>
+      <div class="thought-bubble" id="thought"></div>
+    </div>
+    <div class="tip-hint" id="tipHint"></div>
+
+    <div class="input-area">
+      <label id="inputLabel">What would you say?</label>
+      <textarea id="userInput" placeholder="Type your response here..."></textarea>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitResponse()">
+      Ask AI Advisor
+    </button>
+
+    <div class="loading" id="loading">AI is thinking<span class="dots"></span></div>
+
+    <div class="feedback" id="feedback">
+      <div class="feedback-header">
+        <div class="feedback-icon">AI</div>
+        <div class="feedback-title">AI Advisor's Feedback</div>
+      </div>
+      <div class="feedback-section fb-strategy">
+        <div class="fb-label">Strategy check</div>
+        <div class="fb-text" id="fbStrategy"></div>
+      </div>
+      <div class="feedback-section fb-suggestion">
+        <div class="fb-label">Suggestion</div>
+        <div class="fb-text" id="fbSuggestion"></div>
+      </div>
+      <div class="feedback-section fb-example">
+        <div class="fb-label">Example response</div>
+        <div class="fb-text" id="fbExample"></div>
+      </div>
+      <button class="try-again" onclick="tryAgain()">Try again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const situations = [
+  {
+    id: 1,
+    tabLabel: "Situation 1",
+    tabSub: "Listening & interest",
+    label: "Situation 1 — Tip 1: Listen carefully and show interest",
+    text: "Your classmate says: \"I started learning to cook on weekends!\"",
+    thought: "",
+    tipHint: "Tip 1: Listen carefully and show interest in others",
+    inputLabel: "What would you say to show interest?",
+    goodKeywords: ["sound", "interesting", "cool", "really", "what", "how", "tell", "more", "dish", "cook", "learn", "try", "favorite", "fun", "amazing", "wow", "great"],
+    badKeywords: ["don't like", "boring", "don't care", "hate", "not interested", "whatever"],
+    goodFeedback: {
+      strategy: "You used Tip 1 well! Your response shows genuine interest by asking a follow-up question or giving an encouraging reaction.",
+      suggestion: "To make it even better, try combining a positive reaction with a specific follow-up question. For example, react first (\"That sounds fun!\") then ask about details.",
+      example: "\"That sounds fun! What dishes have you learned so far?\""
+    },
+    badFeedback: {
+      strategy: "Your response doesn't quite match Tip 1. Remember, the key is to show interest in what the other person is sharing, even if it's not your favorite topic.",
+      suggestion: "Try to: (1) Give a positive reaction first, like \"That's cool!\" (2) Then ask a follow-up question about their experience, like \"What made you want to start?\"",
+      example: "\"Really? That sounds interesting! What's your best dish so far?\""
+    },
+    neutralFeedback: {
+      strategy: "Your response is okay, but it could show more interest. Tip 1 says to listen carefully and find good points to ask about.",
+      suggestion: "Add a follow-up question to keep the conversation going. Show you're curious about their experience!",
+      example: "\"Wow, that's cool! What dishes have you learned to make?\""
+    }
+  },
+  {
+    id: 2,
+    tabLabel: "Situation 2",
+    tabSub: "Choosing topics",
+    label: "Situation 2 — Tip 2: Choose the right topic",
+    text: "A new classmate has just joined your class and sits next to you. How would you start a conversation?",
+    thought: "",
+    tipHint: "Tip 2: Choose the right topic",
+    inputLabel: "What would you say to start a conversation?",
+    goodKeywords: ["welcome", "hi", "hello", "hobby", "like", "sport", "music", "movie", "game", "play", "class", "school", "favorite", "do you", "what do", "free time", "after school", "fun"],
+    badKeywords: ["where do you live", "how old", "parents", "age", "weight", "address", "salary", "money", "why did you come", "why transfer"],
+    goodFeedback: {
+      strategy: "Great use of Tip 2! You chose a safe and friendly topic to start the conversation. Talking about hobbies, interests, or school life is a great way to connect with someone new.",
+      suggestion: "Starting with a warm welcome before asking a question makes the conversation feel even more natural and friendly.",
+      example: "\"Hi! Welcome to our class! What do you like to do after school?\""
+    },
+    badFeedback: {
+      strategy: "Be careful! Your question touches on personal information. Tip 2 reminds us that it's impolite to ask about someone's age, weight, address, or other personal details, especially when you've just met.",
+      suggestion: "Choose safer topics like the weather, sports, music, movies, food, or school activities. These are friendly conversation starters that won't make the other person uncomfortable.",
+      example: "\"Hi! Welcome to our class! Do you play any sports?\""
+    },
+    neutralFeedback: {
+      strategy: "Your conversation starter is okay, but it could be warmer. When meeting someone new, a friendly greeting plus a safe topic works best.",
+      suggestion: "Try starting with \"Welcome\" or \"Nice to meet you\" first, then ask about something you might have in common, like school activities or hobbies.",
+      example: "\"Hi! Welcome to our class! Which school were you at before?\""
+    }
+  },
+  {
+    id: 3,
+    tabLabel: "Situation 3",
+    tabSub: "Being honest",
+    label: "Situation 3 — Tip 3: Be honest and sincere",
+    text: "Your friend says excitedly: \"I just watched Mo's Studio! It's such fun! Have you watched it?\"",
+    thought: "I've never watched it...",
+    tipHint: "Tip 3: Be honest and sincere",
+    inputLabel: "What would you say?",
+    goodKeywords: ["haven't", "not yet", "never", "don't know", "what's it about", "tell me", "sounds", "interesting", "what happen", "what is it", "recommend", "try", "about what", "like about"],
+    badKeywords: ["yeah", "yes", "seen it", "watched it", "amazing", "love it", "great show", "me too"],
+    goodFeedback: {
+      strategy: "Excellent use of Tip 3! You were honest about not having watched it, and you showed sincere interest by asking about it. This is exactly what good communication looks like!",
+      suggestion: "Being honest doesn't mean ending the conversation. You did well by combining honesty with curiosity. This makes your friend feel that you respect both them and yourself.",
+      example: "\"I haven't seen it yet, but it sounds great! What do you like most about it?\""
+    },
+    badFeedback: {
+      strategy: "It seems like you're pretending to know about something you haven't actually watched. Tip 3 reminds us: don't pretend to be nice, because people can find out you're not telling the truth.",
+      suggestion: "It's perfectly okay to say you don't know about something! Try being honest first, then show interest by asking a question. People appreciate sincerity more than a fake agreement.",
+      example: "\"I haven't watched it yet. What's it about? Maybe I'll give it a try!\""
+    },
+    neutralFeedback: {
+      strategy: "Your response is partially honest, but could be more engaging. Tip 3 says to be sincere — which means being truthful AND showing you care about what the other person is sharing.",
+      suggestion: "Combine honesty with a follow-up question. Say you haven't seen it, then ask what makes it so good. This shows genuine interest!",
+      example: "\"I don't know much about it, but you seem to really love it! What's the best part?\""
+    }
+  },
+  {
+    id: 4,
+    tabLabel: "Situation 4",
+    tabSub: "Body language",
+    label: "Situation 4 — Tip 4: Pay attention to your body language",
+    text: "You need to give a short presentation in front of the class. You feel very nervous. What should you do?",
+    thought: "",
+    tipHint: "Tip 4: Pay attention to your body language",
+    inputLabel: "What should you do with your body language?",
+    goodKeywords: ["stand", "straight", "smile", "eye contact", "look at", "look up", "confident", "deep breath", "breathe", "relax", "myself", "be myself", "calm", "slowly", "clear", "loud"],
+    badKeywords: ["look down", "floor", "pocket", "hide", "quiet", "small voice", "run away", "sit down", "don't want"],
+    goodFeedback: {
+      strategy: "Great understanding of Tip 4! You mentioned key body language elements that show confidence. Even when you feel nervous inside, positive body language can help you feel — and look — more confident.",
+      suggestion: "Remember the three key actions from the text: stand up straight, smile, and be yourself. Even small changes in posture can make a big difference in how you feel and how others see you.",
+      example: "\"I should stand up straight, take a deep breath, smile, and try to make eye contact with my classmates. Even if I'm nervous, I can still be myself.\""
+    },
+    badFeedback: {
+      strategy: "The actions you described show nervous body language. Tip 4 tells us to stand up straight, smile, and be ourselves — not to hide or look away.",
+      suggestion: "When you feel nervous, try the opposite of what your body wants to do: instead of looking down, look up; instead of shrinking, stand tall; instead of hiding your hands, keep them naturally at your sides.",
+      example: "\"I should stand up straight, smile at my classmates, and speak clearly. It's okay to be nervous — I just need to be myself and do my best.\""
+    },
+    neutralFeedback: {
+      strategy: "You're on the right track, but you could be more specific about what good body language looks like. Tip 4 gives us clear actions to follow.",
+      suggestion: "Think about three things: your posture (stand straight), your face (smile), and your eyes (look at your audience). These three together make you appear confident even if you're nervous inside.",
+      example: "\"I should stand up straight, take a deep breath, smile, and look at my classmates while I speak. Being myself is the most important thing.\""
+    }
+  }
+];
+
+let currentSit = 0;
+
+function init() {
+  const tabsEl = document.getElementById('tabs');
+  situations.forEach((s, i) => {
+    const tab = document.createElement('div');
+    tab.className = 'tab' + (i === 0 ? ' active' : '');
+    tab.innerHTML = '<span class="tab-num">' + s.tabLabel + '</span>' + s.tabSub;
+    tab.onclick = () => selectSituation(i);
+    tabsEl.appendChild(tab);
+  });
+  loadSituation(0);
+}
+
+function selectSituation(i) {
+  document.querySelectorAll('.tab').forEach((t, idx) => {
+    t.className = 'tab' + (idx === i ? ' active' : '');
+  });
+  loadSituation(i);
+}
+
+function loadSituation(i) {
+  currentSit = i;
+  const s = situations[i];
+  document.getElementById('sitLabel').textContent = s.label;
+  document.getElementById('sitText').textContent = s.text;
+  const thoughtEl = document.getElementById('thought');
+  if (s.thought) {
+    thoughtEl.textContent = s.thought;
+    thoughtEl.style.display = 'block';
+  } else {
+    thoughtEl.style.display = 'none';
+  }
+  document.getElementById('tipHint').textContent = s.tipHint;
+  document.getElementById('inputLabel').textContent = s.inputLabel;
+  document.getElementById('userInput').value = '';
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('submitBtn').disabled = false;
+}
+
+function toggleSettings() {
+  const p = document.getElementById('settingsPanel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
+async function submitResponse() {
+  const input = document.getElementById('userInput').value.trim();
+  if (!input) { alert('Please type your response first!'); return; }
+
+  const apiKey = document.getElementById('apiKey').value.trim();
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+
+  if (apiKey) {
+    await getAIFeedback(input, apiKey);
+  } else {
+    setTimeout(() => { getLocalFeedback(input); }, 1200);
+  }
+}
+
+function getLocalFeedback(input) {
+  const s = situations[currentSit];
+  const lower = input.toLowerCase();
+  const goodCount = s.goodKeywords.filter(k => lower.includes(k)).length;
+  const badCount = s.badKeywords.filter(k => lower.includes(k)).length;
+
+  let fb;
+  if (badCount > 0) {
+    fb = s.badFeedback;
+  } else if (goodCount >= 2) {
+    fb = s.goodFeedback;
+  } else if (goodCount === 1) {
+    fb = s.neutralFeedback;
+  } else {
+    fb = s.neutralFeedback;
+  }
+
+  showFeedback(fb.strategy, fb.suggestion, fb.example);
+}
+
+async function getAIFeedback(input, apiKey) {
+  const s = situations[currentSit];
+  const apiBase = document.getElementById('apiBase').value.trim() || 'https://api.openai.com/v1';
+  const prompt = "You are an AI Communication Advisor for a middle school English class. A student is practicing communication strategies from the text 'How to Make a Better Conversation'.\n\nThe situation is: " + s.text + "\nThe relevant tip is: " + s.tipHint + "\nThe student's response is: \"" + input + "\"\n\nGive feedback in exactly this JSON format:\n{\"strategy\": \"(evaluate whether their response matches the tip, 2-3 sentences)\", \"suggestion\": \"(give specific improvement advice, 2-3 sentences)\", \"example\": \"(provide one example of a good response, in quotes)\"}\n\nKeep language simple and encouraging, suitable for Grade 8 students. Respond ONLY with the JSON.";
+
+  try {
+    const resp = await fetch(apiBase + '/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+      body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 400 })
+    });
+    const data = await resp.json();
+    const content = data.choices[0].message.content;
+    const fb = JSON.parse(content.replace(/```json\n?/g, '').replace(/```/g, '').trim());
+    showFeedback(fb.strategy, fb.suggestion, fb.example);
+  } catch (e) {
+    console.error(e);
+    getLocalFeedback(input);
+  }
+}
+
+function showFeedback(strategy, suggestion, example) {
+  document.getElementById('fbStrategy').textContent = strategy;
+  document.getElementById('fbSuggestion').textContent = suggestion;
+  document.getElementById('fbExample').textContent = example;
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('feedback').style.display = 'block';
+  document.getElementById('submitBtn').disabled = false;
+}
+
+function tryAgain() {
+  document.getElementById('userInput').value = '';
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('userInput').focus();
+}
+
+init();
+</script>
+</body>
+</html>
