@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Communication Advisor</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;background:linear-gradient(145deg,#e8f0fb 0%,#f0f5ff 30%,#faf8f3 70%,#e8f0fb 100%);min-height:100vh;padding:24px;color:#333}
+.container{max-width:760px;margin:0 auto}
+.header{text-align:center;margin-bottom:24px}
+.header h1{font-size:24px;color:#4A6FA5;font-weight:700;margin-bottom:6px}
+.header p{font-size:13px;color:#8a9ab5}
+.ai-badge{display:inline-flex;align-items:center;gap:4px;background:#EEEDFE;color:#534AB7;font-size:11px;padding:4px 12px;border-radius:16px;font-weight:600;margin-top:8px}
+
+.section-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.sec-tab{padding:10px 18px;background:rgba(255,255,255,0.6);border:1.5px solid #d8e2f0;border-radius:22px;cursor:pointer;font-size:13px;color:#6b7fa3;font-weight:500;transition:all 0.2s;line-height:1.4}
+.sec-tab:hover{border-color:#4A6FA5;background:rgba(255,255,255,0.85)}
+.sec-tab.active{background:#4A6FA5;color:#fff;border-color:#4A6FA5}
+.sec-tab .tab-cn{font-size:13px;font-weight:600}
+.sec-tab .tab-en{font-size:11px;opacity:0.85}
+
+.situation-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.tab{padding:10px 14px;background:rgba(255,255,255,0.7);border:1.5px solid #d8e2f0;border-radius:10px;cursor:pointer;text-align:center;transition:all 0.2s;font-size:12px;color:#6b7fa3;line-height:1.3;min-width:85px}
+.tab:hover{border-color:#4A6FA5;background:rgba(255,255,255,0.9)}
+.tab.active{background:#fff;border-color:#4A6FA5;color:#4A6FA5;font-weight:600;box-shadow:0 2px 8px rgba(74,111,165,0.1)}
+
+.card{background:rgba(255,255,255,0.9);border-radius:14px;padding:28px;margin-bottom:16px;border:1px solid rgba(216,226,240,0.6);box-shadow:0 2px 12px rgba(74,111,165,0.04)}
+.situation-box{background:linear-gradient(135deg,#f5f8fc,#eef3fb);border-radius:10px;padding:18px;margin-bottom:18px;border-left:3px solid #4A6FA5}
+.situation-label{font-size:11px;color:#4A6FA5;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+.situation-text{font-size:15px;color:#333;line-height:1.7}
+.thought-bubble{margin-top:10px;font-size:13px;color:#888;font-style:italic;display:none}
+.tip-hint{display:inline-block;background:#EEEDFE;color:#534AB7;font-size:12px;padding:4px 12px;border-radius:12px;margin-bottom:18px;font-weight:500}
+.no-tip-note{display:inline-block;background:#fef9ee;color:#ba7517;font-size:12px;padding:4px 12px;border-radius:12px;margin-bottom:18px;font-weight:500}
+
+.input-area{margin-bottom:18px}
+.input-area label{display:block;font-size:14px;color:#6b7fa3;margin-bottom:8px;font-weight:500}
+.input-wrap{position:relative}
+.input-area textarea{width:100%;height:90px;padding:14px 14px 14px 14px;border:1.5px solid #d8e2f0;border-radius:10px;font-size:15px;font-family:inherit;resize:vertical;outline:none;transition:border-color 0.2s;background:rgba(255,255,255,0.9)}
+.input-area textarea:focus{border-color:#4A6FA5}
+.input-area textarea::placeholder{color:#c0cde0}
+
+.voice-row{display:flex;align-items:center;gap:12px;margin-bottom:18px;padding:12px 16px;background:rgba(238,237,254,0.3);border-radius:10px;border:1.5px solid #e8e2f0}
+.mic-btn{width:48px;height:48px;border-radius:50%;border:2px solid #4A6FA5;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-size:22px;color:#4A6FA5;flex-shrink:0}
+.mic-btn:hover{background:#f0f5ff;transform:scale(1.05)}
+.mic-btn.recording{background:#e24b4a;border-color:#e24b4a;color:#fff;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.voice-info{font-size:13px;color:#6b7fa3;line-height:1.5}
+.voice-info .voice-status{font-weight:600;color:#4A6FA5}
+.voice-info .voice-status.recording{color:#e24b4a}
+.voice-hint{font-size:11px;color:#b0bdd0;margin-top:2px}
+
+.btn-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.submit-btn{background:#4A6FA5;color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.submit-btn:hover{background:#3a5f95;transform:translateY(-1px)}
+.submit-btn:active{transform:translateY(0)}
+.submit-btn:disabled{background:#b0bdd0;cursor:not-allowed;transform:none}
+
+.feedback{display:none;margin-top:22px;animation:fadeIn 0.4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.feedback-header{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.feedback-icon{width:34px;height:34px;background:#EEEDFE;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#534AB7}
+.feedback-title{font-size:15px;font-weight:600;color:#534AB7}
+.feedback-section{margin-bottom:14px;padding:14px;border-radius:8px}
+.fb-strategy{background:#f5f8fc;border-left:3px solid #4A6FA5}
+.fb-suggestion{background:#fef9ee;border-left:3px solid #e8b830}
+.fb-example{background:#f0faf5;border-left:3px solid #1D9E75}
+.fb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.fb-strategy .fb-label{color:#4A6FA5}
+.fb-suggestion .fb-label{color:#ba7517}
+.fb-example .fb-label{color:#0F6E56}
+.fb-text{font-size:14px;line-height:1.7;color:#444}
+.try-again{background:none;border:1.5px solid #4A6FA5;color:#4A6FA5;padding:9px 22px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;margin-top:10px;transition:all 0.2s}
+.try-again:hover{background:#f0f5ff}
+.loading{display:none;text-align:center;padding:20px;color:#6b7fa3;font-size:14px}
+.loading .dots::after{content:'';animation:dots 1.5s infinite}
+@keyframes dots{0%{content:''}33%{content:'.'}66%{content:'..'}100%{content:'...'}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>AI Communication Advisor</h1>
+    <p>Practice your communication skills and get instant feedback</p>
+    <span class="ai-badge">AI-Powered</span>
+  </div>
+
+  <div class="section-tabs" id="sectionTabs"></div>
+  <div class="situation-tabs" id="tabs"></div>
+
+  <div class="card">
+    <div class="situation-box">
+      <div class="situation-label" id="sitLabel"></div>
+      <div class="situation-text" id="sitText"></div>
+      <div class="thought-bubble" id="thought"></div>
+    </div>
+    <div id="tipArea"></div>
+
+    <div class="input-area">
+      <label id="inputLabel">What would you say?</label>
+      <div class="input-wrap">
+        <textarea id="userInput" placeholder="Type your response here..."></textarea>
+      </div>
+    </div>
+
+    <div class="voice-row">
+      <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="??????">&#127908;</button>
+      <div class="voice-info">
+        <div class="voice-status" id="voiceStatus">???????????????</div>
+        <div class="voice-hint" id="voiceHint">Click the mic and speak in English ? ?????????</div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="submit-btn" id="submitBtn" onclick="submitResponse()">Ask AI Advisor</button>
+    </div>
+
+    <div class="loading" id="loading">AI is thinking<span class="dots"></span></div>
+
+    <div class="feedback" id="feedback">
+      <div class="feedback-header">
+        <div class="feedback-icon">AI</div>
+        <div class="feedback-title">AI Advisor's Feedback</div>
+      </div>
+      <div class="feedback-section fb-strategy">
+        <div class="fb-label">Strategy check</div>
+        <div class="fb-text" id="fbStrategy"></div>
+      </div>
+      <div class="feedback-section fb-suggestion">
+        <div class="fb-label">Suggestion</div>
+        <div class="fb-text" id="fbSuggestion"></div>
+      </div>
+      <div class="feedback-section fb-example">
+        <div class="fb-label">Example response</div>
+        <div class="fb-text" id="fbExample"></div>
+      </div>
+      <button class="try-again" onclick="tryAgain()">Try again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const sections = [
+  { id: "practice", cn: "?????", en: "Find the Words" },
+  { id: "group", cn: "?????, en: "Apply the Skills" },
+  { id: "homework", cn: "??????", en: "Homework" }
+];
+
+const allSituations = {
+  practice: [
+    { id:"p1", tabLabel:"1", tabSub:"Listening", label:"Situation 1 ??Tip 1: Listen carefully and show interest", text:"Your classmate says: \"I started learning to cook on weekends!\"", thought:"", tipHint:"Tip 1: Listen carefully and show interest in others", inputLabel:"What would you say to show interest?",
+      goodKw:["sound","interesting","cool","really","what","how","tell","more","dish","cook","learn","try","favorite","fun","amazing","wow","great"],
+      badKw:["don't like","boring","don't care","hate","not interested","whatever"],
+      goodFb:{strategy:"You used Tip 1 well! Your response shows genuine interest by asking a follow-up question or giving an encouraging reaction.",suggestion:"To make it even better, try combining a positive reaction with a specific follow-up question.",example:"\"That sounds fun! What dishes have you learned so far?\""},
+      badFb:{strategy:"Your response doesn't quite match Tip 1. The key is to show interest in what the other person is sharing.",suggestion:"Try to: (1) Give a positive reaction first (2) Then ask a follow-up question about their experience.",example:"\"Really? That sounds interesting! What's your best dish so far?\""},
+      neutralFb:{strategy:"Your response is okay, but it could show more interest. Tip 1 says to listen carefully and find good points to ask about.",suggestion:"Add a follow-up question to keep the conversation going!",example:"\"Wow, that's cool! What dishes have you learned to make?\""}},
+    { id:"p2", tabLabel:"2", tabSub:"Topics", label:"Situation 2 ??Tip 2: Choose the right topic", text:"A new classmate has just joined your class and sits next to you. How would you start a conversation?", thought:"", tipHint:"Tip 2: Choose the right topic", inputLabel:"What would you say to start a conversation?",
+      goodKw:["welcome","hi","hello","hobby","like","sport","music","movie","game","play","class","school","favorite","do you","what do","free time","after school","fun"],
+      badKw:["where do you live","how old","parents","age","weight","address","salary","money","why did you come","why transfer"],
+      goodFb:{strategy:"Great use of Tip 2! You chose a safe and friendly topic.",suggestion:"Starting with a warm welcome before asking a question makes it even more natural.",example:"\"Hi! Welcome to our class! What do you like to do after school?\""},
+      badFb:{strategy:"Be careful! Your question touches on personal information. Tip 2 reminds us not to ask about age, address, or personal details.",suggestion:"Choose safer topics like sports, music, movies, food, or school activities.",example:"\"Hi! Welcome to our class! Do you play any sports?\""},
+      neutralFb:{strategy:"Your conversation starter is okay, but could be warmer.",suggestion:"Try starting with \"Welcome\" first, then ask about something you might have in common.",example:"\"Hi! Welcome! Which school were you at before?\""}},
+    { id:"p3", tabLabel:"3", tabSub:"Honesty", label:"Situation 3 ??Tip 3: Be honest and sincere", text:"Your friend says excitedly: \"I just watched Mo's Studio! It's such fun! Have you watched it?\"", thought:"I've never watched it...", tipHint:"Tip 3: Be honest and sincere", inputLabel:"What would you say?",
+      goodKw:["haven't","not yet","never","don't know","what's it about","tell me","sounds","interesting","what happen","what is it","recommend","try","about what","like about"],
+      badKw:["yeah","yes","seen it","watched it","amazing","love it","great show","me too"],
+      goodFb:{strategy:"Excellent use of Tip 3! You were honest about not having watched it, and showed sincere interest.",suggestion:"Being honest doesn't mean ending the conversation. Combine honesty with curiosity!",example:"\"I haven't seen it yet, but it sounds great! What do you like most about it?\""},
+      badFb:{strategy:"It seems like you're pretending to know about something you haven't watched. Tip 3: don't pretend to be nice.",suggestion:"It's okay to say you don't know! Try being honest first, then show interest.",example:"\"I haven't watched it yet. What's it about? Maybe I'll give it a try!\""},
+      neutralFb:{strategy:"Your response is partially honest, but could be more engaging.",suggestion:"Combine honesty with a follow-up question.",example:"\"I don't know much about it, but you seem to love it! What's the best part?\""}},
+    { id:"p4", tabLabel:"4", tabSub:"Body language", label:"Situation 4 ??Tip 4: Pay attention to your body language", text:"You need to give a short presentation in front of the class. You feel very nervous. What should you do?", thought:"", tipHint:"Tip 4: Pay attention to your body language", inputLabel:"What should you do with your body language?",
+      goodKw:["stand","straight","smile","eye contact","look at","look up","confident","deep breath","breathe","relax","myself","be myself","calm","slowly","clear","loud"],
+      badKw:["look down","floor","pocket","hide","quiet","small voice","run away","sit down","don't want"],
+      goodFb:{strategy:"Great understanding of Tip 4! You mentioned key body language elements that show confidence.",suggestion:"Remember: stand up straight, smile, and be yourself.",example:"\"Stand up straight, take a deep breath, smile, and try to make eye contact with my classmates.\""},
+      badFb:{strategy:"The actions you described show nervous body language. Tip 4 tells us to stand straight, smile, and be ourselves.",suggestion:"Try the opposite of what your body wants: look up instead of down, stand tall instead of shrinking.",example:"\"Stand up straight, smile at my classmates, and speak clearly. It's okay to be nervous ??just be myself.\""},
+      neutralFb:{strategy:"You're on the right track, but could be more specific.",suggestion:"Think about three things: posture (stand straight), face (smile), eyes (look at your audience).",example:"\"Stand up straight, take a deep breath, smile, and look at my classmates while I speak.\""}}
+  ],
+  group: [
+    { id:"g1", tabLabel:"Card 1", tabSub:"Friend + holiday", label:"Group Card 1", text:"After the holiday, your good friend says, \"I went to Gulangyu Island with my family! We ate so much seafood!\" How do you respond to keep the conversation going?", thought:"", noTip:true, inputLabel:"What would you say or do?",
+      goodKw:["sound","interesting","cool","really","what","how","tell","more","where","fun","amazing","wow","great","try","seafood","delicious","visit","like","enjoy"],
+      badKw:["don't care","boring","so what","whatever","not interested"],
+      goodFb:{strategy:"Good job! You showed interest and kept the conversation going by asking about their experience or sharing a related thought.",suggestion:"Try to ask specific follow-up questions about details ??what they did, what they ate, what was most fun.",example:"\"That sounds amazing! What was the most fun thing you did there? I've always wanted to try the seafood!\""},
+      badFb:{strategy:"Your response might make your friend feel you're not interested in their experience.",suggestion:"Show interest by reacting positively and asking follow-up questions about their trip.",example:"\"Wow, Gulangyu! That sounds so fun! What did you like best about it?\""},
+      neutralFb:{strategy:"Your response is okay but could be more engaging. Try to show more curiosity!",suggestion:"Ask about specific details of their trip to keep the conversation flowing.",example:"\"That's cool! What kind of seafood did you try? Did you see anything interesting on the island?\""}},
+    { id:"g2", tabLabel:"Card 2", tabSub:"New classmate", label:"Group Card 2", text:"Your class is preparing for a singing competition. You and a classmate you don't know well are in the same group. What topics would you choose to start a conversation?", thought:"", noTip:true, inputLabel:"What would you say?",
+      goodKw:["music","song","sing","like","listen","favorite","band","singer","practice","do you","what kind","enjoy","play","instrument","fun"],
+      badKw:["where do you live","how old","parents","age","personal","private","why"],
+      goodFb:{strategy:"Smart topic choice! You picked something related to the shared activity (singing competition) which is a natural and safe conversation starter.",suggestion:"Connecting your question to the shared situation makes it easier for both of you to talk.",example:"\"Hi! Do you like singing? What kind of music do you listen to?\""},
+      badFb:{strategy:"Be careful with personal questions when you don't know someone well yet. Try to find common ground through the shared activity.",suggestion:"Since you're both in the singing competition, use music as your conversation starter!",example:"\"Hi! I'm excited about the competition. What's your favorite song?\""},
+      neutralFb:{strategy:"Your approach is okay, but you could connect more to the shared situation.",suggestion:"Use the singing competition as a natural bridge to start talking!",example:"\"Hey, so we're in the same group! Do you have any favorite songs we could try?\""}},
+    { id:"g3", tabLabel:"Card 3", tabSub:"Comfort classmate", label:"Group Card 3", text:"After an exam, your deskmate didn't do as well as you. He/She looks a bit upset. How do you talk to him/her?", thought:"", noTip:true, inputLabel:"What would you say or do?",
+      goodKw:["good at","strong","well in","better","next time","hard","effort","help","study","together","don't worry","cheer","improve","try","proud","subject","math","english","science"],
+      badKw:["easy","simple","I got","my score","how much","what did you get","fail","bad","terrible","stupid"],
+      goodFb:{strategy:"Well done! You showed empathy and focused on your classmate's strengths, which is exactly what sincere communication looks like.",suggestion:"Mentioning specific things they're good at makes your encouragement more genuine and believable.",example:"\"Hey, don't worry too much. You did really well in English! And I can see you've been working hard. Want to study together next time?\""},
+      badFb:{strategy:"Be careful ??mentioning your own score or calling the exam easy might make your classmate feel worse. Focus on their strengths instead.",suggestion:"Try to mention something specific they're good at, and offer support rather than comparison.",example:"\"I know you worked hard. You're really good at science! Want to review together for the next one?\""},
+      neutralFb:{strategy:"Your response shows you care, but could be more specific in encouraging your classmate.",suggestion:"Mention a specific subject or skill they're strong in ??it feels more genuine than general encouragement.",example:"\"Don't worry! You're so good at math. One test doesn't define you. Let's study together next time!\""}},
+    { id:"g4", tabLabel:"Card 4", tabSub:"Teacher question", label:"Group Card 4", text:"Your teacher asks you a question in class. You're not sure about the answer and feel nervous. What should you do?", thought:"", noTip:true, inputLabel:"What should you do and say?",
+      goodKw:["stand","straight","smile","eye contact","look","confident","breath","try","think","not sure","but I think","honest","ask","help","hint","speak","clear","calm","myself"],
+      badKw:["look down","hide","quiet","silent","nothing","don't know","sit","ignore","pretend"],
+      goodFb:{strategy:"Great approach! You combined good body language with honest communication ??standing confidently while being truthful about what you know.",suggestion:"Even when unsure, you can still participate. Try saying what you do know, then ask for help.",example:"\"I'm not sure about the full answer, but I think it might be... Could you give me a hint?\""},
+      badFb:{strategy:"Staying silent or avoiding the question doesn't help. It's okay not to know ??what matters is how you handle it.",suggestion:"Stand up straight, look at the teacher, and honestly say what you think. Teachers appreciate the effort!",example:"\"I'm not 100% sure, but I think... Could you explain it a bit more?\""},
+      neutralFb:{strategy:"You're on the right track. Try to be more specific about what you would do with your body language AND what you would say.",suggestion:"Think about both your posture (stand straight, look up) and your words (be honest, try your best).",example:"\"Stand up straight, take a breath, and say: I'm not sure, but I think the answer might be... Could you help me?\""}}
+  ],
+  homework: [
+    { id:"h1", tabLabel:"1", tabSub:"Basketball", label:"Situation 1", text:"Your classmate just joined the school basketball team. He keeps talking about it ??the training, the games, everything! But you don't often play basketball.", thought:"", noTip:true, inputLabel:"What would you say to keep the conversation going?",
+      goodKw:["sound","interesting","cool","really","what","how","tell","more","game","practice","team","fun","amazing","wow","great","like","watch","play","try","position","score","win"],
+      badKw:["don't like","boring","don't care","hate","not interested","whatever"],
+      goodFb:{strategy:"Good job! You found something in their story to ask about or react to, even though basketball isn't your usual thing.",suggestion:"You don't need to be an expert ??just pick up on details they mentioned (training, games) and ask more.",example:"\"That sounds exciting! How's the training going? Do you have any games coming up?\""},
+      badFb:{strategy:"Shutting down the topic can make your classmate feel ignored. Try to find something in what they said that you can ask about.",suggestion:"Even if you don't play basketball, you can ask about their experience ??the team, the feeling of playing, upcoming games.",example:"\"Cool! I don't know much about basketball, but it sounds intense. What position do you play?\""},
+      neutralFb:{strategy:"Your response is okay, but try to dig a little deeper into what they shared.",suggestion:"Pick a specific detail they mentioned (training, games) and ask a follow-up question.",example:"\"That's cool! What's the training like? Is it hard?\""}},
+    { id:"h2", tabLabel:"2", tabSub:"Teacher's story", label:"Situation 2", text:"Your teacher says: \"I didn't like reading when I was young, but one book changed my mind.\"", thought:"", noTip:true, inputLabel:"What would you say?",
+      goodKw:["what book","which book","what's","tell","more","really","interesting","what changed","how","why","recommend","read","name","curious","surprised"],
+      badKw:["boring","don't care","so what","whatever","old","hate reading"],
+      goodFb:{strategy:"Great! You picked up on the interesting part of the story and asked to know more. That's active listening.",suggestion:"When someone shares a turning point, asking about the details shows real curiosity.",example:"\"Really? What book was it? I'm curious what changed your mind!\""},
+      badFb:{strategy:"Your teacher shared something personal. Dismissing it or ignoring the story misses a chance to connect.",suggestion:"The interesting part is the change ??ask what book it was, or what made it different from others.",example:"\"That's surprising! Which book was it? Maybe I'd like it too.\""},
+      neutralFb:{strategy:"Your response shows some interest, but you could go further by asking about the specific book or what changed.",suggestion:"The 'hook' in the story is the change ??one book made a difference. Ask about that!",example:"\"Oh really? What was the book? I'd love to know what made you start liking reading.\""}},
+    { id:"h3", tabLabel:"3", tabSub:"New classmate", label:"Situation 3", text:"A new student transfers to your class. You want to make him/her feel welcome at lunch.", thought:"", noTip:true, inputLabel:"What would you say?",
+      goodKw:["welcome","hi","hello","sit","join","lunch","eat","like","food","hobby","sport","music","class","friend","together","favorite","come","us"],
+      badKw:["where do you live","how old","parents","age","why transfer","why come","personal","private"],
+      goodFb:{strategy:"Friendly and welcoming! You chose a safe and comfortable way to break the ice with someone new.",suggestion:"Inviting them to join you and picking a light topic is perfect for a first interaction.",example:"\"Hey, want to sit with us? What's your favorite food? The canteen has pretty good noodles!\""},
+      badFb:{strategy:"Those questions might feel too personal for someone you just met. Keep it light and friendly!",suggestion:"Try inviting them to join you and asking about everyday things like food, classes, or hobbies.",example:"\"Hi! Welcome! Want to join us for lunch? Do you like the food here?\""},
+      neutralFb:{strategy:"Good start! You could make it even warmer by inviting them to sit with you.",suggestion:"Combine a welcome with a casual, easy-to-answer question.",example:"\"Hey, come sit with us! What kind of food do you like?\""}},
+    { id:"h4", tabLabel:"4", tabSub:"Say no", label:"Situation 4", text:"Your friend asks you to play after school, but you have other plans.", thought:"", noTip:true, inputLabel:"How would you say?",
+      goodKw:["sorry","can't","busy","have to","need to","another time","tomorrow","next time","plan","wish","would love","rain check","later","how about","maybe","weekend"],
+      badKw:["sure","okay","yes","fine","whatever","don't want to","don't like you","no"],
+      goodFb:{strategy:"Honest and kind! You told the truth while showing you still value the friendship.",suggestion:"Offering an alternative time shows you genuinely want to hang out, just not today.",example:"\"Sorry, I can't today ??I have to help my mom. How about tomorrow after school?\""},
+      badFb:{strategy:"Either you're not being honest (saying yes when you can't go), or you're being too blunt without warmth.",suggestion:"Be truthful about your plans, but soften it by suggesting another time. That shows you care.",example:"\"I'd love to, but I have something planned today. Can we play tomorrow instead?\""},
+      neutralFb:{strategy:"Your response is okay, but adding a reason and an alternative would feel more sincere.",suggestion:"People feel better when they know WHY you can't and WHEN you could instead.",example:"\"Sorry, I have plans today. But I'm free tomorrow ??want to play then?\""}},
+    { id:"h5", tabLabel:"5", tabSub:"Teacher asks", label:"Situation 5", text:"Your teacher asks you a question in class, but you didn't quite catch what she said.", thought:"", noTip:true, inputLabel:"What would you do or say?",
+      goodKw:["sorry","could you","repeat","again","didn't catch","not sure","pardon","excuse me","say that again","stand","straight","look","eye","calm","breathe","honest","explain"],
+      badKw:["nothing","silent","quiet","ignore","pretend","guess","make up","look down","hide"],
+      goodFb:{strategy:"Well done! You were honest about not catching the question, and your approach shows confidence and respect.",suggestion:"Combining good body language (stand straight, look at the teacher) with honest words makes a strong impression.",example:"\"Sorry, could you repeat the question? I didn't quite catch it.\""},
+      badFb:{strategy:"Staying silent or pretending you heard won't help. It's completely fine to ask the teacher to repeat ??they'd rather you ask than guess.",suggestion:"Stand up straight, look at your teacher, and politely ask them to say it again. That takes courage!",example:"\"Excuse me, could you say that again? I missed part of it.\""},
+      neutralFb:{strategy:"You're on the right track. Think about both what you'd SAY and how you'd LOOK while saying it.",suggestion:"Your body language matters too ??stand straight, look at the teacher, and speak calmly.",example:"\"Stand up, look at the teacher and say: Sorry, I didn't quite hear the question. Could you repeat it?\"" }}
+  ]
+};
+
+let currentSection = "practice";
+let currentIdx = 0;
+let recognition = null;
+let isRecording = false;
+
+function init() {
+  const secEl = document.getElementById('sectionTabs');
+  sections.forEach(s => {
+    const t = document.createElement('div');
+    t.className = 'sec-tab' + (s.id === 'practice' ? ' active' : '');
+    t.innerHTML = '<span class="tab-cn">' + s.cn + '</span> <span class="tab-en">' + s.en + '</span>';
+    t.onclick = () => selectSection(s.id);
+    t.id = 'sec-' + s.id;
+    secEl.appendChild(t);
+  });
+  renderTabs();
+  loadSituation(0);
+}
+
+function selectSection(id) {
+  currentSection = id;
+  document.querySelectorAll('.sec-tab').forEach(t => t.className = 'sec-tab');
+  document.getElementById('sec-' + id).className = 'sec-tab active';
+  renderTabs();
+  loadSituation(0);
+}
+
+function renderTabs() {
+  const tabsEl = document.getElementById('tabs');
+  tabsEl.innerHTML = '';
+  const sits = allSituations[currentSection];
+  sits.forEach((s, i) => {
+    const tab = document.createElement('div');
+    tab.className = 'tab' + (i === 0 ? ' active' : '');
+    tab.innerHTML = '<div style="font-weight:600">' + s.tabLabel + '</div><div style="font-size:10px;color:#999">' + s.tabSub + '</div>';
+    tab.onclick = () => { currentIdx = i; document.querySelectorAll('.tab').forEach((t,j) => t.className = 'tab' + (j===i?' active':'')); loadSituation(i); };
+    tabsEl.appendChild(tab);
+  });
+}
+
+function loadSituation(i) {
+  currentIdx = i;
+  const s = allSituations[currentSection][i];
+  document.getElementById('sitLabel').textContent = s.label;
+  document.getElementById('sitText').textContent = s.text;
+  const thoughtEl = document.getElementById('thought');
+  if (s.thought) { thoughtEl.textContent = '?? ' + s.thought; thoughtEl.style.display = 'block'; } else { thoughtEl.style.display = 'none'; }
+  const tipArea = document.getElementById('tipArea');
+  if (s.noTip) { tipArea.innerHTML = '<div class="no-tip-note">?? Which tip(s) would you use? Think before you answer!</div>'; }
+  else if (s.tipHint) { tipArea.innerHTML = '<div class="tip-hint">?? ' + s.tipHint + '</div>'; }
+  else { tipArea.innerHTML = ''; }
+  document.getElementById('inputLabel').textContent = s.inputLabel;
+  document.getElementById('userInput').value = '';
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('submitBtn').disabled = false;
+}
+
+function toggleMic() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('???????????hrome???????????hrome??????????);
+    return;
+  }
+  if (isRecording) { stopMic(); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.interimResults = true;
+  recognition.continuous = true;
+  recognition.onresult = function(e) {
+    let final = '';
+    let interim = '';
+    for (let i = 0; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        final += e.results[i][0].transcript + ' ';
+      } else {
+        interim += e.results[i][0].transcript;
+      }
+    }
+    document.getElementById('userInput').value = final + interim;
+  };
+  recognition.onerror = function(e) {
+    if (e.error !== 'no-speech') stopMic();
+  };
+  recognition.onend = function() {
+    if (isRecording) {
+      // auto-restart for continuous recognition
+      try { recognition.start(); } catch(e) { stopMic(); }
+    }
+  };
+  recognition.start();
+  isRecording = true;
+  document.getElementById('micBtn').classList.add('recording');
+  document.getElementById('voiceStatus').textContent = '?????..?????????';
+  document.getElementById('voiceStatus').classList.add('recording');
+  document.getElementById('voiceHint').textContent = '?????????????????;
+}
+
+function stopMic() {
+  if (recognition) { try { recognition.stop(); } catch(e){} }
+  isRecording = false;
+  document.getElementById('micBtn').classList.remove('recording');
+  document.getElementById('voiceStatus').textContent = '???????????????';
+  document.getElementById('voiceStatus').classList.remove('recording');
+  document.getElementById('voiceHint').textContent = 'Click the mic and speak in English ? ?????????';
+}
+
+function submitResponse() {
+  const input = document.getElementById('userInput').value.trim();
+  if (!input) { alert('Please type or speak your response first!'); return; }
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  if (isRecording) stopMic();
+  setTimeout(() => { getLocalFeedback(input); }, 1000);
+}
+
+function getLocalFeedback(input) {
+  const s = allSituations[currentSection][currentIdx];
+  const lower = input.toLowerCase();
+  const goodCount = s.goodKw.filter(k => lower.includes(k)).length;
+  const badCount = s.badKw.filter(k => lower.includes(k)).length;
+  let fb;
+  if (badCount > 0) fb = s.badFb;
+  else if (goodCount >= 2) fb = s.goodFb;
+  else fb = s.neutralFb;
+  showFeedback(fb.strategy, fb.suggestion, fb.example);
+}
+
+function showFeedback(strategy, suggestion, example) {
+  document.getElementById('fbStrategy').textContent = strategy;
+  document.getElementById('fbSuggestion').textContent = suggestion;
+  document.getElementById('fbExample').textContent = example;
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('feedback').style.display = 'block';
+  document.getElementById('submitBtn').disabled = false;
+}
+
+function tryAgain() {
+  document.getElementById('userInput').value = '';
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('userInput').focus();
+}
+
+init();
+</script>
+</body>
+</html>
